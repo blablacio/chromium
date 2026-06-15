@@ -49,6 +49,10 @@ BASE_DECLARE_FEATURE(kMenuSimplification);
 BASE_DECLARE_FEATURE(kTabGroupColorRefresh);
 BASE_DECLARE_FEATURE(kWebuiRefresh2026);
 
+// Controls whether the native SideTree port can replace or augment Chromium's
+// vertical tab behavior.
+BASE_DECLARE_FEATURE(kNativeSideTree);
+
 bool IsTabStripDeclutterEnabled();
 bool IsToolbarGlowUpEnabled();
 bool IsToolbarGlowUpReloadEnabled();
