@@ -25,6 +25,7 @@ class BrowserViewLayoutDelegateImpl : public BrowserViewLayoutDelegate {
   bool ShouldDrawTabStrip() const override;
   bool ShouldDrawVerticalTabStrip() const override;
   bool IsVerticalTabStripCollapsed() const override;
+  bool IsVerticalTabStripRightAligned() const override;
   bool ShouldDrawWebAppFrameToolbar() const override;
   bool GetUnframedModeEnabled() const override;
   BrowserLayoutParams GetBrowserLayoutParams(
