@@ -92,6 +92,7 @@ class TabDragTarget;
 class TabSearchBubbleHost;
 class TabStrip;
 class TabStripRegionView;
+class ToolbarButton;
 class ToolbarButtonProvider;
 class ToolbarView;
 class TopContainerView;
@@ -109,6 +110,7 @@ class VerticalTabStripStateController;
 }  // namespace tabs
 
 namespace ui {
+class Event;
 class NativeTheme;
 }  // namespace ui
 
@@ -338,6 +340,9 @@ class BrowserView : public BrowserWindow,
   // Returns whether a vertical tabstrip should be shown.
   bool ShouldDrawVerticalTabStrip() const;
 
+  // Returns whether SideTree is replacing Chromium's native vertical tabstrip.
+  bool IsSideTreeVerticalTabStripActive() const;
+
   // Returns whether the webapp frame toolbar should be drawn.
   bool ShouldDrawWebAppFrameToolbar() const;
 
@@ -346,6 +351,10 @@ class BrowserView : public BrowserWindow,
 
   // Returns whether the vertical tabstrip is collapsed.
   bool IsVerticalTabStripCollapsed() const;
+
+  // Returns whether the SideTree vertical tabstrip should be aligned to the
+  // right edge of the browser window.
+  bool IsVerticalTabStripRightAligned() const;
 
   // Returns true if the profile associated with this Browser window is
   // incognito.
@@ -884,6 +893,10 @@ class BrowserView : public BrowserWindow,
 
   void OnVerticalTabStripModeChanged(
       tabs::VerticalTabStripStateController* controller);
+  void OnVerticalTabStripCollapseChanged(
+      tabs::VerticalTabStripCollapseState collapse_state);
+  void SideTreeTitlebarCollapseButtonPressed(const ui::Event& event);
+  void UpdateSideTreeTitlebarCollapseButton();
 
   // Callback for the loading animation(s) associated with this view.
   void LoadingAnimationTimerCallback();
@@ -1169,6 +1182,7 @@ class BrowserView : public BrowserWindow,
   std::optional<size_t> horizontal_tab_strip_region_insertion_index_;
   // The Toolbar containing the navigation buttons, menus and the address bar.
   raw_ptr<ToolbarView> toolbar_ = nullptr;
+  raw_ptr<ToolbarButton> sidetree_titlebar_collapse_button_ = nullptr;
 
   // The OverlayView for the widget, which is used to host `top_container_`
   // during immersive reveal.
@@ -1388,6 +1402,7 @@ class BrowserView : public BrowserWindow,
   PrefChangeRegistrar registrar_;
 
   base::CallbackListSubscription vertical_tab_subscription_;
+  base::CallbackListSubscription vertical_tab_collapse_subscription_;
 
   std::unique_ptr<tabs::VerticalTabStripStateController::ScopedEnableStateLock>
       vertical_tabs_enable_state_lock_;

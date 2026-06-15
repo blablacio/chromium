@@ -58,6 +58,10 @@ BASE_DECLARE_FEATURE(kSettingsRefresh2026);
 // Enables search in the app Chrome menu.
 BASE_DECLARE_FEATURE(kChroMenuSearch);
 
+// Controls whether the native SideTree port can replace or augment Chromium's
+// vertical tab behavior.
+BASE_DECLARE_FEATURE(kNativeSideTree);
+
 bool IsTabStripDeclutterEnabled();
 bool IsToolbarGlowUpEnabled();
 bool IsToolbarGlowUpReloadEnabled();
