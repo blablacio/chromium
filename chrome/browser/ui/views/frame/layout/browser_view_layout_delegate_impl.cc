@@ -61,6 +61,10 @@ bool BrowserViewLayoutDelegateImpl::IsVerticalTabStripCollapsed() const {
   return browser_view_->IsVerticalTabStripCollapsed();
 }
 
+bool BrowserViewLayoutDelegateImpl::IsVerticalTabStripRightAligned() const {
+  return browser_view_->IsVerticalTabStripRightAligned();
+}
+
 bool BrowserViewLayoutDelegateImpl::ShouldDrawWebAppFrameToolbar() const {
   return browser_view_->ShouldDrawWebAppFrameToolbar();
 }
