@@ -35,6 +35,7 @@
 #include "ui/views/layout/delegating_layout_manager.h"
 
 class BrowserView;
+class SideTreeTabStripView;
 class VerticalTabStripTopContainer;
 class VerticalTabStripBottomContainer;
 class VerticalTabStripFocusSwipeController;
@@ -66,11 +67,11 @@ class VerticalTabStripRegionView final
 
   // TODO(crbug.com/465833741): Replace constant with derived value based on
   // caption buttons.
-  static constexpr int kUncollapsedMinWidth = 126;
+  static constexpr int kUncollapsedMinWidth = 160;
   // TODO(crbug.com/465832180): Replace constant based width final max width for
   // view.
   static constexpr int kUncollapsedMaxWidth = 400;
-  static constexpr int kCollapsedWidth = 56;
+  static constexpr int kCollapsedWidth = 42;
   // TODO(crbug.com/465833741): Determine snapping behavior.
   static constexpr int kCollapseSnapWidth =
       (kUncollapsedMinWidth + kCollapsedWidth) / 2;
@@ -109,6 +110,8 @@ class VerticalTabStripRegionView final
   views::ProposedLayout CalculateProposedLayout(
       const views::SizeBounds& size_bounds) const override;
 
+  bool IsSideTreeShellActive() const;
+
   // views::View:
   void AddedToWidget() override;
   void RemovedFromWidget() override;
@@ -122,6 +125,13 @@ class VerticalTabStripRegionView final
   void OnMouseMoved(const ui::MouseEvent& event) override;
   void OnMouseExited(const ui::MouseEvent& event) override;
 
+  // TabStripRegionView:
+  std::optional<int> GetFocusedTabIndex() const override;
+  views::View* GetTabAnchorView(const tabs::TabHandle& tab) override;
+
+  void OnTabGroupFocusChanged(
+      std::optional<tab_groups::TabGroupId> new_focused_group_id,
+      std::optional<tab_groups::TabGroupId> old_focused_group_id) override;
   std::unique_ptr<ExpandOnHoverLock> GetExpandOnHoverLock(
       ExpandOnHoverLockType lock_type) override;
 
@@ -218,6 +228,8 @@ class VerticalTabStripRegionView final
 
   void OnCollapseStateChanged(
       tabs::VerticalTabStripCollapseState collapse_state);
+  void ForceSideTreeExpandedState();
+  void UpdateColors();
 
   void OnAnimationProgressed(const BrowserAnimationController* controller,
                              BrowserAnimationUpdate status);
@@ -225,6 +237,7 @@ class VerticalTabStripRegionView final
   // Get whether the collapse/expand animation is running.
   bool IsAnimatingSize() const;
 
+  bool IsFrameActive() const;
   bool IsCollapseButtonHovered() const;
 
   // Returns the bounds within which tabs can be dragged in the vertical tab
@@ -259,6 +272,7 @@ class VerticalTabStripRegionView final
   raw_ptr<views::View> content_area_view_ = nullptr;
   raw_ptr<VerticalTabStripTopContainer> top_button_container_ = nullptr;
   raw_ptr<views::Separator> top_button_separator_ = nullptr;
+  raw_ptr<SideTreeTabStripView> sidetree_shell_view_ = nullptr;
   raw_ptr<VerticalTabStripBottomContainer> bottom_button_container_ = nullptr;
   raw_ptr<views::View> gemini_button_ = nullptr;
   raw_ptr<views::ResizeArea> resize_area_ = nullptr;
