@@ -1,0 +1,37 @@
+name: SideTree static checks
+
+on:
+  push:
+    branches:
+      - "sidetree/chromium-*"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  touched-source-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out touched Chromium paths
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+          sparse-checkout: |
+            .github/workflows
+            chrome/browser/ui
+            chrome/common/pref_names.h
+            chrome/test/BUILD.gn
+
+      - name: Check whitespace in branch diff
+        run: |
+          base="$(git rev-parse HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD)"
+          git diff --check "$base"..HEAD -- chrome/browser/ui chrome/common/pref_names.h chrome/test/BUILD.gn
+
+      - name: Reject stale Sidebery identifiers
+        run: |
+          if git grep -n -E "Sidebery|sidebery|NativeSidebery" -- chrome/browser/ui chrome/common/pref_names.h chrome/test/BUILD.gn; then
+            echo "::error::Found stale Sidebery naming in SideTree Chromium paths"
+            exit 1
+          fi
