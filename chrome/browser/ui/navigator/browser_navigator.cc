@@ -11,6 +11,7 @@
 #include <string_view>
 #include <utility>
 
+#include "base/feature_list.h"
 #include "base/memory/raw_ptr.h"
 #include "base/notimplemented.h"
 #include "base/notreached.h"
@@ -41,6 +42,8 @@
 #include "chrome/browser/ui/tabs/split_tab_metrics.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
 #include "chrome/browser/ui/tabs/tab_strip_user_gesture_details.h"
+#include "chrome/browser/ui/ui_features.h"
+#include "chrome/browser/ui/views/tabs/sidetree/sidetree_container_tab_state.h"
 #include "chrome/browser/ui/web_applications/app_browser_controller.h"
 #include "chrome/browser/ui/web_applications/web_app_tabbed_utils.h"
 #include "chrome/browser/web_applications/web_app_helpers.h"
@@ -490,10 +493,20 @@ std::unique_ptr<content::WebContents> CreateTargetContents(
   // subsequent navigation is cross-process (i.e. cross-SiteInstance), then it
   // will stay in the same BrowsingInstance (creating frame proxies as needed)
   // preserving the requested opener relationship along the way.
+  const bool use_sidetree_container =
+      !params.opener && base::FeatureList::IsEnabled(features::kNativeSideTree);
+  const sidetree::SideTreeContainerTabState sidetree_container_state =
+      use_sidetree_container ? sidetree::ResolveSideTreeContainerForNewTab(
+                                   params.browser->GetProfile()->GetPrefs())
+                             : sidetree::SideTreeContainerTabState();
   scoped_refptr<content::SiteInstance> initial_site_instance_for_new_contents =
       params.opener ? params.opener->GetSiteInstance()
-                    : tab_util::GetSiteInstanceForNewTab(
-                          params.browser->GetProfile(), url);
+                    : (use_sidetree_container
+                           ? sidetree::CreateSideTreeSiteInstanceForNewTab(
+                                 params.browser->GetProfile(), url,
+                                 sidetree_container_state)
+                           : tab_util::GetSiteInstanceForNewTab(
+                                 params.browser->GetProfile(), url));
 
   WebContents::CreateParams create_params(
       params.browser->GetProfile(), initial_site_instance_for_new_contents);
@@ -517,7 +530,14 @@ std::unique_ptr<content::WebContents> CreateTargetContents(
   }
 #endif
 
-  return WebContents::Create(create_params);
+  std::unique_ptr<content::WebContents> contents =
+      WebContents::Create(create_params);
+  if (use_sidetree_container && sidetree_container_state.UsesContainer() &&
+      sidetree_container_state.container) {
+    sidetree::PersistSideTreeContainerForCreatedTab(
+        contents.get(), sidetree_container_state.container->id);
+  }
+  return contents;
 }
 
 }  // namespace
