@@ -32,6 +32,7 @@
 #include "ui/views/focus/focus_manager.h"
 
 class BrowserView;
+class SideTreeTabStripView;
 class VerticalTabStripTopContainer;
 class VerticalTabStripBottomContainer;
 class ShadowFrameView;
@@ -61,11 +62,11 @@ class VerticalTabStripRegionView final
 
   // TODO(crbug.com/465833741): Replace constant with derived value based on
   // caption buttons.
-  static constexpr int kUncollapsedMinWidth = 126;
+  static constexpr int kUncollapsedMinWidth = 160;
   // TODO(crbug.com/465832180): Replace constant based width final max width for
   // view.
   static constexpr int kUncollapsedMaxWidth = 400;
-  static constexpr int kCollapsedWidth = 56;
+  static constexpr int kCollapsedWidth = 42;
   // TODO(crbug.com/465833741): Determine snapping behavior.
   static constexpr int kCollapseSnapWidth =
       (kUncollapsedMinWidth + kCollapsedWidth) / 2;
@@ -100,6 +101,8 @@ class VerticalTabStripRegionView final
   void SetTransitionButtonOpacity(float opacity);
   bool WillWrapDueToOverflow(int available_width) const;
 
+  bool IsSideTreeShellActive() const;
+
   // views::View:
   void AddedToWidget() override;
   void RemovedFromWidget() override;
@@ -112,6 +115,10 @@ class VerticalTabStripRegionView final
   void OnMouseEntered(const ui::MouseEvent& event) override;
   void OnMouseMoved(const ui::MouseEvent& event) override;
   void OnMouseExited(const ui::MouseEvent& event) override;
+
+  // TabStripRegionView:
+  std::optional<int> GetFocusedTabIndex() const override;
+  views::View* GetTabAnchorViewAt(int tab_index) override;
 
   void OnTabGroupFocusChanged(
       std::optional<tab_groups::TabGroupId> new_focused_group_id,
@@ -200,6 +207,7 @@ class VerticalTabStripRegionView final
 
   void OnCollapseStateChanged(
       tabs::VerticalTabStripCollapseState collapse_state);
+  void ForceSideTreeExpandedState();
 
   void UpdateColors();
 
@@ -237,6 +245,7 @@ class VerticalTabStripRegionView final
 
   raw_ptr<VerticalTabStripTopContainer> top_button_container_ = nullptr;
   raw_ptr<views::Separator> top_button_separator_ = nullptr;
+  raw_ptr<SideTreeTabStripView> sidetree_shell_view_ = nullptr;
   raw_ptr<VerticalTabStripBottomContainer> bottom_button_container_ = nullptr;
   raw_ptr<views::View> gemini_button_ = nullptr;
   raw_ptr<views::ResizeArea> resize_area_ = nullptr;
