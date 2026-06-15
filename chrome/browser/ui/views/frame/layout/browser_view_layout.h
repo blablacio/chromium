@@ -74,6 +74,7 @@ struct BrowserViewLayoutViews {
   raw_ptr<CustomFloatingCorner> vertical_tab_strip_bottom_corner = nullptr;
   raw_ptr<CustomFloatingCorner> vertical_tab_strip_top_corner = nullptr;
   raw_ptr<OrganizerTrayView> organizer_tray = nullptr;
+  raw_ptr<views::View> sidetree_titlebar_collapse_button = nullptr;
   raw_ptr<views::View> toolbar = nullptr;
   raw_ptr<InfoBarContainerView> infobar_container = nullptr;
   raw_ptr<MultiContentsView> multi_contents_view = nullptr;
