@@ -1388,6 +1388,38 @@ inline constexpr char kVerticalTabsCollapsedState[] =
 // width. Only used during startup when session restore is not used.
 inline constexpr char kVerticalTabsUncollapsedWidth[] =
     "vertical_tabs.uncollapsed_width";
+
+// A boolean pref set to true if native SideTree rows expose inline tab actions.
+inline constexpr char kSideTreeShowInlineTabActions[] =
+    "sidetree.show_inline_tab_actions";
+
+// A boolean pref set to true if native SideTree rows show tab hover previews.
+inline constexpr char kSideTreeShowHoverPreviews[] =
+    "sidetree.show_hover_previews";
+
+// A boolean pref set to true if native SideTree rows expose a row-local mute
+// button.
+inline constexpr char kSideTreeShowTabMuteButton[] =
+    "sidetree.show_tab_mute_button";
+
+// A boolean pref set to true if native SideTree vertical tabs are aligned to
+// the right edge of the browser window.
+inline constexpr char kSideTreeVerticalTabsRightAligned[] =
+    "sidetree.vertical_tabs.right_aligned";
+
+// A list pref containing native SideTree workspace metadata records.
+inline constexpr char kSideTreeWorkspaces[] = "sidetree.workspaces.v1.items";
+
+// A string pref containing the default native SideTree workspace id.
+inline constexpr char kSideTreeDefaultWorkspaceId[] =
+    "sidetree.workspaces.v1.default_id";
+
+// A list pref containing native SideTree container metadata records.
+inline constexpr char kSideTreeContainers[] = "sidetree.containers.v1.items";
+
+// A string pref containing the default native SideTree container id.
+inline constexpr char kSideTreeDefaultContainerId[] =
+    "sidetree.containers.v1.default_id";
 #endif  // !BUILDFLAG(IS_ANDROID)
 
 #if BUILDFLAG(ENABLE_COMPOSE)

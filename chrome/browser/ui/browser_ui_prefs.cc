@@ -12,6 +12,7 @@
 #include "build/build_config.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/ui/ui_features.h"
+#include "chrome/browser/ui/views/tabs/sidetree/sidetree_profile_service.h"
 #include "chrome/browser/upgrade_detector/upgrade_detector.h"
 #include "chrome/common/buildflags.h"
 #include "chrome/common/pref_names.h"
@@ -131,6 +132,12 @@ void RegisterBrowserUserPrefs(user_prefs::PrefRegistrySyncable* registry) {
                                 pref_registration_flags);
   registry->RegisterBooleanPref(prefs::kPinSplitTabButton, false,
                                 pref_registration_flags);
+  registry->RegisterBooleanPref(prefs::kSideTreeShowInlineTabActions, false);
+  registry->RegisterBooleanPref(prefs::kSideTreeShowHoverPreviews, false);
+  registry->RegisterBooleanPref(prefs::kSideTreeShowTabMuteButton, false);
+  registry->RegisterBooleanPref(prefs::kSideTreeVerticalTabsRightAligned,
+                                false);
+  sidetree::SideTreeProfileService::RegisterProfilePrefs(registry);
 
   registry->RegisterInt64Pref(prefs::kDefaultBrowserInfobarLastDeclined, 0);
   registry->RegisterBooleanPref(prefs::kWebAppCreateOnDesktop, true);
