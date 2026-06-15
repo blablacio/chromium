@@ -221,6 +221,7 @@
 #include "chrome/browser/ui/views/toolbar/chrome_labs/chrome_labs_coordinator.h"
 #include "chrome/browser/ui/views/toolbar/pinned_toolbar_actions_container.h"
 #include "chrome/browser/ui/views/toolbar/reload_control.h"
+#include "chrome/browser/ui/views/toolbar/toolbar_button.h"
 #include "chrome/browser/ui/views/toolbar/toolbar_view.h"
 #include "chrome/browser/ui/views/translate/translate_bubble_controller.h"
 #include "chrome/browser/ui/views/translate/translate_bubble_view.h"
@@ -347,6 +348,7 @@
 #include "ui/views/view.h"
 #include "ui/views/view_class_properties.h"
 #include "ui/views/view_utils.h"
+#include "ui/views/vector_icons.h"
 #include "ui/views/views_features.h"
 #include "ui/views/widget/native_widget.h"
 #include "ui/views/widget/root_view.h"
@@ -985,6 +987,16 @@ BrowserView::BrowserView(Browser* browser)
     vertical_tab_strip_bottom_corner_->SetProperty(
         views::kElementIdentifierKey,
         BrowserViewLayoutViews::kVerticalTabStripBottomCornerElementId);
+
+    sidetree_titlebar_collapse_button_ =
+        AddChildView(std::make_unique<ToolbarButton>(base::BindRepeating(
+            &BrowserView::SideTreeTitlebarCollapseButtonPressed,
+            base::Unretained(this))));
+    sidetree_titlebar_collapse_button_->SetID(
+        VIEW_ID_COLLAPSE_VERTICAL_TABS_BUTTON);
+    sidetree_titlebar_collapse_button_->SetVisible(false);
+    sidetree_titlebar_collapse_button_->SetProperty(
+        views::kElementIdentifierKey, kVerticalTabStripCollapseButtonElementId);
   } else {
     horizontal_tab_strip_region_view_->InitializeTabStrip();
   }
@@ -1028,6 +1040,10 @@ BrowserView::BrowserView(Browser* browser)
       prefs::kFullscreenAllowed,
       base::BindRepeating(&BrowserView::UpdateFullscreenAllowedFromPolicy,
                           base::Unretained(this), CanFullscreen()));
+  registrar_.Add(
+      prefs::kSideTreeVerticalTabsRightAligned,
+      base::BindRepeating(&BrowserView::UpdateSideTreeTitlebarCollapseButton,
+                          base::Unretained(this)));
   UpdateFullscreenAllowedFromPolicy(CanFullscreen());
 
   WebUIContentsPreloadManager::GetInstance()->WarmupForBrowser(browser_.get());
@@ -1050,6 +1066,10 @@ BrowserView::BrowserView(Browser* browser)
     vertical_tab_subscription_ =
         vertical_tab_strip_state_controller->RegisterOnModeChanged(
             base::BindRepeating(&BrowserView::OnVerticalTabStripModeChanged,
+                                base::Unretained(this)));
+    vertical_tab_collapse_subscription_ =
+        vertical_tab_strip_state_controller->RegisterOnCollapseChanged(
+            base::BindRepeating(&BrowserView::OnVerticalTabStripCollapseChanged,
                                 base::Unretained(this)));
   }
 
@@ -1365,6 +1385,11 @@ bool BrowserView::ShouldDrawVerticalTabStrip() const {
          controller->ShouldDisplayVerticalTabs() && browser_->is_type_normal();
 }
 
+bool BrowserView::IsSideTreeVerticalTabStripActive() const {
+  return ShouldDrawVerticalTabStrip() && vertical_tab_strip_region_view_ &&
+         vertical_tab_strip_region_view_->IsSideTreeShellActive();
+}
+
 bool BrowserView::ShouldDrawWebAppFrameToolbar() const {
   return !IsUnframedModeEnabled() &&
          GetFrameView()->ShouldShowWebAppFrameToolbar();
@@ -1376,6 +1401,13 @@ bool BrowserView::IsVerticalTabStripCollapsed() const {
     return controller->IsCollapsed();
   }
   return false;
+}
+
+bool BrowserView::IsVerticalTabStripRightAligned() const {
+  Profile* const profile = GetProfile();
+  return IsSideTreeVerticalTabStripActive() && profile &&
+         profile->GetPrefs()->GetBoolean(
+             prefs::kSideTreeVerticalTabsRightAligned);
 }
 
 bool BrowserView::GetIncognito() const {
@@ -1506,6 +1538,56 @@ void BrowserView::OnVerticalTabStripModeChanged(
   GetFrameView()->OnTabStripStateChanged();
 
   UpdateTabSearchBubbleHost();
+  UpdateSideTreeTitlebarCollapseButton();
+  InvalidateLayout();
+}
+
+void BrowserView::OnVerticalTabStripCollapseChanged(
+    tabs::VerticalTabStripCollapseState) {
+  UpdateSideTreeTitlebarCollapseButton();
+}
+
+void BrowserView::SideTreeTitlebarCollapseButtonPressed(
+    const ui::Event&) {
+  auto* controller = tabs::VerticalTabStripStateController::From(browser_);
+  if (!controller) {
+    return;
+  }
+  controller->RequestCollapse(!controller->IsCollapsed());
+}
+
+void BrowserView::UpdateSideTreeTitlebarCollapseButton() {
+  if (!sidetree_titlebar_collapse_button_) {
+    return;
+  }
+
+  auto* controller = tabs::VerticalTabStripStateController::From(browser_);
+  const bool should_show = IsSideTreeVerticalTabStripActive() && controller &&
+                           controller->ShouldDisplayVerticalTabs();
+  const bool visibility_changed =
+      sidetree_titlebar_collapse_button_->GetVisible() != should_show;
+  sidetree_titlebar_collapse_button_->SetVisible(should_show);
+
+  if (!should_show) {
+    if (visibility_changed) {
+      InvalidateLayout();
+    }
+    return;
+  }
+
+  const bool right_aligned = IsVerticalTabStripRightAligned();
+  const bool should_use_menu_open_icon =
+      controller->IsCollapsed() == right_aligned;
+  const gfx::VectorIcon& icon =
+      should_use_menu_open_icon ? views::kMenuOpenIcon
+                                : views::kMenuCloseCustomIcon;
+  const int text_id = controller->IsCollapsed() ? IDS_EXPAND_VERTICAL_TABS
+                                                : IDS_COLLAPSE_VERTICAL_TABS;
+  const std::u16string text = l10n_util::GetStringUTF16(text_id);
+
+  sidetree_titlebar_collapse_button_->SetVectorIcon(icon);
+  sidetree_titlebar_collapse_button_->SetTooltipText(text);
+  sidetree_titlebar_collapse_button_->GetViewAccessibility().SetName(text);
   InvalidateLayout();
 }
 
@@ -4147,6 +4229,26 @@ void BrowserView::UpdateTabSearchBubbleHost() {
       tabs::VerticalTabStripStateController::From(browser_);
   if (vertical_tab_strip_state_controller &&
       vertical_tab_strip_state_controller->ShouldDisplayVerticalTabs()) {
+    if (IsSideTreeVerticalTabStripActive()) {
+      auto* toolbar_button_controller =
+          TabSearchToolbarButtonController::From(browser_.get());
+      if (!toolbar_->tab_search_button()) {
+        tab_search_bubble_host_.reset();
+        if (toolbar_button_controller) {
+          toolbar_button_controller->UpdateBubbleHost(nullptr);
+        }
+        return;
+      }
+
+      tab_search_bubble_host_ = std::make_unique<TabSearchBubbleHost>(
+          toolbar_->tab_search_button(), browser_.get());
+      if (toolbar_button_controller) {
+        toolbar_button_controller->UpdateBubbleHost(
+            tab_search_bubble_host_.get());
+      }
+      return;
+    }
+
     auto* combo_button =
         vertical_tab_strip_region_view_->GetTopContainer()->GetComboButton();
     tab_search_bubble_host_ = std::make_unique<TabSearchBubbleHost>(
@@ -4391,8 +4493,8 @@ void BrowserView::GetAccessiblePanes(std::vector<views::View*>* panes) {
         toolbar_->location_bar_view()
             ->permission_dashboard_view()
             ->GetVisible()) {
-      panes->push_back(toolbar_->location_bar_view()
-                           ->permission_dashboard_view());
+      panes->push_back(
+          toolbar_->location_bar_view()->permission_dashboard_view());
     }
   } else if (toolbar_ && toolbar_->location_bar() &&
              toolbar_->location_bar()->GetChipController() &&
@@ -4566,6 +4668,15 @@ int BrowserView::NonClientHitTest(const gfx::Point& point) {
   gfx::Point point_in_browser_view_coords(point);
   views::View::ConvertPointToTarget(parent(), this,
                                     &point_in_browser_view_coords);
+
+  if (sidetree_titlebar_collapse_button_ &&
+      sidetree_titlebar_collapse_button_->GetVisible()) {
+    gfx::Point test_point(point);
+    if (ConvertedHitTest(parent(), sidetree_titlebar_collapse_button_,
+                         &test_point)) {
+      return HTCLIENT;
+    }
+  }
 
   // Check if the point is in the web_app_frame_toolbar_. Because this toolbar
   // can entirely be within the window controls overlay area, this check needs
@@ -4867,6 +4978,7 @@ void BrowserView::AddedToWidget() {
   }
 
   UpdateTabSearchBubbleHost();
+  UpdateSideTreeTitlebarCollapseButton();
 
 #if BUILDFLAG(IS_CHROMEOS)
   // TopControlsSlideController must be initialized here in AddedToWidget()
@@ -4932,6 +5044,8 @@ void BrowserView::AddedToWidget() {
   layout_views.vertical_tab_strip_bottom_corner =
       vertical_tab_strip_bottom_corner_;
   layout_views.vertical_tab_strip_top_corner = vertical_tab_strip_top_corner_;
+  layout_views.sidetree_titlebar_collapse_button =
+      sidetree_titlebar_collapse_button_;
   layout_views.projects_panel_container = projects_panel_container_;
   layout_views.toolbar = toolbar_;
   layout_views.infobar_container = infobar_container_;
