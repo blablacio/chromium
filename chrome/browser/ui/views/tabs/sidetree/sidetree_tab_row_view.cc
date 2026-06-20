@@ -206,8 +206,8 @@ SideTreeTabRowView::SideTreeTabRowView(Delegate* delegate, State state)
   branch_button_ = AddChildView(views::CreateVectorImageButtonWithNativeTheme(
       base::BindRepeating(&SideTreeTabRowView::ToggleBranch,
                           base::Unretained(this)),
-      vector_icons::kSubmenuArrowIcon, kBranchIconSize, kColorToolbarButtonIcon,
-      kColorToolbarButtonIconDisabled));
+      vector_icons::kSubmenuArrowOldIcon, kBranchIconSize,
+      kColorToolbarButtonIcon, kColorToolbarButtonIconDisabled));
   branch_button_->SetPreferredSize(gfx::Size(kBranchButtonWidth, RowHeight()));
   branch_button_->SetFocusBehavior(views::View::FocusBehavior::ALWAYS);
   branch_button_->set_context_menu_controller(this);
@@ -277,7 +277,7 @@ SideTreeTabRowView::SideTreeTabRowView(Delegate* delegate, State state)
       AddChildView(views::CreateVectorImageButtonWithNativeTheme(
           base::BindRepeating(&SideTreeTabRowView::ToggleAudioMute,
                               base::Unretained(this)),
-          vector_icons::kVolumeOffChromeRefreshIcon, kAudioIconSize,
+          vector_icons::kVolumeOffChromeRefreshOldIcon, kAudioIconSize,
           kColorToolbarButtonIcon, kColorToolbarButtonIconDisabled));
   audio_mute_button_->SetPreferredSize(
       gfx::Size(kAudioIconSlotSize, RowHeight()));
@@ -288,7 +288,7 @@ SideTreeTabRowView::SideTreeTabRowView(Delegate* delegate, State state)
       AddChildView(views::CreateVectorImageButtonWithNativeTheme(
           base::BindRepeating(&SideTreeTabRowView::CreateChild,
                               base::Unretained(this)),
-          vector_icons::kAddIcon, kInlineActionIconSize,
+          vector_icons::kAddOldIcon, kInlineActionIconSize,
           kColorToolbarButtonIcon, kColorToolbarButtonIconDisabled));
   new_child_button_->SetTooltipText(u"New child tab");
   new_child_button_->SetPreferredSize(
@@ -1170,7 +1170,7 @@ void SideTreeTabRowView::UpdateBranchButtonIcon() {
   }
 
   gfx::ImageSkia arrow = gfx::CreateVectorIcon(
-      vector_icons::kSubmenuArrowIcon, kBranchIconSize,
+      vector_icons::kSubmenuArrowOldIcon, kBranchIconSize,
       SkColorSetA(cp->GetColor(kColorToolbarButtonIcon), kBranchIconAlpha));
   if (state_.expanded) {
     arrow = gfx::ImageSkiaOperations::CreateRotatedImage(
@@ -1304,8 +1304,8 @@ ui::ImageModel SideTreeTabRowView::AudioStateIcon() const {
   }
 
   const gfx::VectorIcon& icon = state_.muted
-                                    ? vector_icons::kVolumeOffChromeRefreshIcon
-                                    : vector_icons::kVolumeUpChromeRefreshIcon;
+                                    ? vector_icons::kVolumeOffChromeRefreshOldIcon
+                                    : vector_icons::kVolumeUpChromeRefreshOldIcon;
   return ui::ImageModel::FromVectorIcon(
       icon, ResolveSecondaryTextColor(),
       state_.pinned ? kPinnedAudioIconSize : kAudioIconSize);
