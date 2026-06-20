@@ -993,7 +993,7 @@ class SideTreeManagementContentsView : public views::View {
                            &SideTreeManagementContentsView::OpenWorkspaceEditor,
                            base::Unretained(this)),
                        workspace_id);
-    AddRowActionButton(actions, u"Delete workspace", kTrashCanIcon,
+    AddRowActionButton(actions, u"Delete workspace", kTrashCanOldIcon,
                        archive_workspace_callback_, workspace_id);
   }
 
@@ -1007,7 +1007,7 @@ class SideTreeManagementContentsView : public views::View {
                            &SideTreeManagementContentsView::OpenContainerEditor,
                            base::Unretained(this)),
                        container_id);
-    AddRowActionButton(actions, u"Remove container", kTrashCanIcon,
+    AddRowActionButton(actions, u"Remove container", kTrashCanOldIcon,
                        remove_container_callback_, container_id);
   }
 
@@ -1049,7 +1049,7 @@ class SideTreeManagementContentsView : public views::View {
             ButtonCallbackFromClosure(base::BindRepeating(
                 &SideTreeManagementContentsView::CloseEditor,
                 base::Unretained(this))),
-            vector_icons::kBackArrowIcon, kManagementActionIconSize,
+            vector_icons::kBackArrowOldIcon, kManagementActionIconSize,
             kColorToolbarButtonIcon, kColorToolbarButtonIconDisabled));
     back_button->SetPreferredSize(
         gfx::Size(kManagementActionButtonSize, kManagementActionButtonSize));
@@ -2620,7 +2620,7 @@ const gfx::VectorIcon& WorkspaceVectorIcon(std::string_view icon) {
     return kFingerprintIcon;
   }
   if (icon == "briefcase") {
-    return vector_icons::kBusinessIcon;
+    return vector_icons::kBusinessOldIcon;
   }
   if (icon == "dollar") {
     return vector_icons::kWorkIcon;
@@ -2635,7 +2635,7 @@ const gfx::VectorIcon& WorkspaceVectorIcon(std::string_view icon) {
     return vector_icons::kFlightIcon;
   }
   if (icon == "food" || icon == "fruit" || icon == "pet") {
-    return vector_icons::kDogfoodIcon;
+    return vector_icons::kDogfoodOldIcon;
   }
   if (icon == "tree" || icon == "chill" || icon == "fence") {
     return vector_icons::kFolderOpenIcon;
