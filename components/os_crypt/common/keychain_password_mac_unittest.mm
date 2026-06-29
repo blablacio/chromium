@@ -4,6 +4,7 @@
 
 #include "components/os_crypt/common/keychain_password_mac.h"
 
+#include "build/branding_buildflags.h"
 #include "build/build_config.h"
 #include "crypto/apple/fake_keychain_v2.h"
 #include "crypto/apple/scoped_fake_keychain_v2.h"
@@ -95,5 +96,12 @@ TEST(KeychainPasswordTest, PasswordsDiffer) {
   // And finally check that the passwords are different.
   EXPECT_NE(password1, password2);
 }
+
+#if !BUILDFLAG(GOOGLE_CHROME_BRANDING)
+TEST(KeychainPasswordTest, UsesSideTreeKeychainNames) {
+  EXPECT_EQ("SideTree Safe Storage", KeychainPassword::GetServiceName());
+  EXPECT_EQ("SideTree", KeychainPassword::GetAccountName());
+}
+#endif
 
 }  // namespace
