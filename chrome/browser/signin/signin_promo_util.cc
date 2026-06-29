@@ -37,6 +37,7 @@
 #include "extensions/buildflags/buildflags.h"
 #include "google_apis/gaia/core_account_id.h"
 #include "google_apis/gaia/gaia_id.h"
+#include "google_apis/google_api_keys.h"
 #include "net/base/network_change_notifier.h"
 
 #if !BUILDFLAG(IS_ANDROID)
@@ -332,8 +333,10 @@ ComputeProfileMenuAvatarButtonPromoInfoWithBatchUploadResult(
   signin::IdentityManager* identity_manager =
       IdentityManagerFactory::GetForProfile(profile);
   if (!identity_manager->HasPrimaryAccount(signin::ConsentLevel::kSignin)) {
-    // Do not promote signing in if a sign in cannot be offered at all.
-    if (!CanOfferSignInForPromos(CHECK_DEREF(profile))) {
+    // Do not promote signing in if this build has no OAuth client or if sign-in
+    // cannot otherwise be offered for this profile.
+    if (!google_apis::HasOAuthClientConfigured() ||
+        !CanOfferSignInForPromos(CHECK_DEREF(profile))) {
       return {};
     }
     return {.type = ProfileMenuAvatarButtonPromoInfo::Type::kSigninPromo,
