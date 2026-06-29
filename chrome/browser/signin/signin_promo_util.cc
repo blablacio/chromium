@@ -35,6 +35,7 @@
 #include "components/sync_bookmarks/switches.h"
 #include "google_apis/gaia/core_account_id.h"
 #include "google_apis/gaia/gaia_id.h"
+#include "google_apis/google_api_keys.h"
 #include "net/base/network_change_notifier.h"
 
 #if !BUILDFLAG(IS_ANDROID)
@@ -343,7 +344,8 @@ ComputeProfileMenuAvatarButtonPromoInfoWithBatchUploadResult(
 
   signin::IdentityManager* identity_manager =
       IdentityManagerFactory::GetForProfile(profile);
-  if (base::FeatureList::IsEnabled(switches::kSigninPromoOnAvatarPill) &&
+  if (google_apis::HasOAuthClientConfigured() &&
+      base::FeatureList::IsEnabled(switches::kSigninPromoOnAvatarPill) &&
       !identity_manager->HasPrimaryAccount(signin::ConsentLevel::kSignin)) {
     return {.type = ProfileMenuAvatarButtonPromoInfo::Type::kSigninPromo,
             .local_data_count = 0u};
