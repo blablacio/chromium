@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "base/command_line.h"
+#include "base/files/scoped_temp_dir.h"
 #include "base/functional/bind.h"
 #include "base/strings/to_string.h"
 #include "base/test/mock_callback.h"
@@ -54,11 +55,60 @@
 #include "device/bluetooth/bluetooth_adapter_factory.h"
 #include "device/bluetooth/test/mock_bluetooth_adapter.h"
 #include "extensions/common/extension_builder.h"
+#include "google_apis/api_key_cache.h"
+#include "google_apis/default_api_keys.h"
 #include "google_apis/gaia/gaia_id.h"
+#include "google_apis/google_api_keys.h"
 #include "services/network/test/test_url_loader_factory.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace signin {
+
+namespace {
+
+constexpr char kTestApiToken[] = "test-api-token";
+
+google_apis::DefaultApiKeys GetApiKeysForTesting(bool oauth_configured) {
+  const char* oauth_token = oauth_configured
+                                ? kTestApiToken
+                                : google_apis::DefaultApiKeys::kUnsetApiToken;
+
+  return {
+      .allow_unset_values = true,
+      .allow_override_via_environment = false,
+      .is_using_google_chrome_keys = false,
+      .google_api_key = kTestApiToken,
+      .google_metrics_signing_key = kTestApiToken,
+#if BUILDFLAG(SUPPORT_CDM_SERVER_CERTIFICATE)
+      .google_cdm_server_certificate = kTestApiToken,
+#endif
+#if BUILDFLAG(IS_ANDROID)
+      .google_api_key_android_non_stable = kTestApiToken,
+#else
+      .google_api_key_hats = kTestApiToken,
+#endif  // BUILDFLAG(IS_ANDROID)
+      .google_api_key_remoting = kTestApiToken,
+      .google_api_key_soda = kTestApiToken,
+      .google_api_key_partial_translate = kTestApiToken,
+#if BUILDFLAG(IS_CHROMEOS)
+      .google_api_key_sharing = kTestApiToken,
+      .google_api_key_read_aloud = kTestApiToken,
+      .google_api_key_fresnel = kTestApiToken,
+      .google_api_key_boca = kTestApiToken,
+      .google_api_key_cros_system_geo_ = kTestApiToken,
+      .google_api_key_cros_chrome_geo_ = kTestApiToken,
+#endif
+      .google_client_id_main = oauth_token,
+      .google_client_secret_main = oauth_token,
+      .google_client_id_remoting = oauth_token,
+      .google_client_secret_remoting = oauth_token,
+      .google_client_id_remoting_host = oauth_token,
+      .google_client_secret_remoting_host = oauth_token,
+      .google_default_client_id = oauth_token,
+      .google_default_client_secret = oauth_token};
+}
+
+}  // namespace
 
 #if !BUILDFLAG(IS_CHROMEOS)
 TEST(SigninPromoTest, TestPromoURL) {
@@ -1622,7 +1672,10 @@ class ComputeProfileMenuAvatarButtonPromoInfoParamTest
   }
 
   void SetUp() override {
+    ASSERT_TRUE(profile_dir_.CreateUniqueTempDir());
+
     TestingProfile::Builder builder;
+    builder.SetPath(profile_dir_.GetPath());
     builder.AddTestingFactories(
         IdentityTestEnvironmentProfileAdaptor::
             GetIdentityTestEnvironmentFactoriesWithAppendedFactories(
@@ -1774,6 +1827,12 @@ class ComputeProfileMenuAvatarButtonPromoInfoParamTest
  private:
   content::BrowserTaskEnvironment task_environment_;
 
+  google_apis::ApiKeyCache api_key_cache_{
+      GetApiKeysForTesting(/*oauth_configured=*/true)};
+  base::ScopedClosureRunner scoped_api_key_cache_override_ =
+      google_apis::SetScopedApiKeyCacheForTesting(&api_key_cache_);
+
+  base::ScopedTempDir profile_dir_;
   std::unique_ptr<TestingProfile> profile_;
   BatchUploadServiceTestHelper batch_upload_test_helper_;
 
@@ -1801,6 +1860,19 @@ TEST_P(ComputeProfileMenuAvatarButtonPromoInfoParamTest,
   }
 
   EXPECT_CALL(result_callback, Run(expected_info));
+  ComputeProfileMenuAvatarButtonPromoInfo(*profile(), result_callback.Get());
+}
+
+TEST_P(ComputeProfileMenuAvatarButtonPromoInfoParamTest,
+       NoSigninPromoIfOAuthClientMissing) {
+  google_apis::ApiKeyCache no_oauth_api_key_cache(
+      GetApiKeysForTesting(/*oauth_configured=*/false));
+  auto scoped_no_oauth_override =
+      google_apis::SetScopedApiKeyCacheForTesting(&no_oauth_api_key_cache);
+
+  base::MockCallback<base::OnceCallback<void(ProfileMenuAvatarButtonPromoInfo)>>
+      result_callback;
+  EXPECT_CALL(result_callback, Run(ProfileMenuAvatarButtonPromoInfo()));
   ComputeProfileMenuAvatarButtonPromoInfo(*profile(), result_callback.Get());
 }
 
