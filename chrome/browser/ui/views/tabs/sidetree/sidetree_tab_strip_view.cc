@@ -2950,9 +2950,9 @@ void SideTreeTabStripView::RebuildRows(bool reveal_active_tab) {
                           TabSlotController::HoverCardUpdateType::kTabRemoved);
   rows_.clear();
   RebuildWorkspaceButtons();
+  tab_list_new_tab_button_ = nullptr;
   pinned_container_->RemoveAllChildViews();
   rows_container_->RemoveAllChildViews();
-  tab_list_new_tab_button_ = nullptr;
   SyncTreeModel(reveal_active_tab);
 
   bool has_pinned_rows = false;
