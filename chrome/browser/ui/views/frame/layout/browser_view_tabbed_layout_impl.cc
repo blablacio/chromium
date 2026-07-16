@@ -867,8 +867,8 @@ BrowserViewTabbedLayoutImpl::CalculateProposedLayout(
           vertical_right_aligned ? views::Separator::kThickness : 0));
       views().vertical_tab_strip_top_corner->SetOrientation(
           vertical_right_aligned
-              ? CustomFloatingCorner::CornerOrientation::kTopTrailing
-              : CustomFloatingCorner::CornerOrientation::kTopLeading);
+              ? CornerOrientation::kTopTrailing
+              : CornerOrientation::kTopLeading);
     }
     layout.AddChild(views().vertical_tab_strip_top_corner, corner_bounds,
                     top_corner_visible);
@@ -902,8 +902,8 @@ BrowserViewTabbedLayoutImpl::CalculateProposedLayout(
           vertical_right_aligned ? views::Separator::kThickness : 0));
       views().vertical_tab_strip_bottom_corner->SetOrientation(
           vertical_right_aligned
-              ? CustomFloatingCorner::CornerOrientation::kBottomTrailing
-              : CustomFloatingCorner::CornerOrientation::kBottomLeading);
+              ? CornerOrientation::kBottomTrailing
+              : CornerOrientation::kBottomLeading);
     }
     layout.AddChild(views().vertical_tab_strip_bottom_corner, corner_bounds,
                     bottom_corner_visible);
