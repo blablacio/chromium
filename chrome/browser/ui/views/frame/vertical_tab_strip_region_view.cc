@@ -999,10 +999,12 @@ void VerticalTabStripRegionView::UpdateColors() {
           static_cast<CustomCornersBackground*>(this->background())) {
     if (IsSideTreeShellActive()) {
       background->SetPrimaryColor(kColorSidePanelBackground);
-      background->SetCornerColor(kColorSidePanelBackground);
+      background->SetCornerColor(
+          CustomCorners::ColorChoiceWithAlpha(kColorSidePanelBackground));
     } else {
       background->SetPrimaryColor(CustomCornersBackground::FrameTheme());
-      background->SetCornerColor(CustomCornersBackground::ToolbarTheme());
+      background->SetCornerColor(CustomCorners::ColorChoiceWithAlpha(
+          CustomCornersBackground::ToolbarTheme()));
     }
   }
   if (top_button_separator_) {
