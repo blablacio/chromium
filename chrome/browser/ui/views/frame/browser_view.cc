@@ -4309,24 +4309,10 @@ void BrowserView::UpdateTabSearchBubbleHost() {
       vertical_tab_strip_state_controller->ShouldDisplayVerticalTabs()) {
     // This runs before InitializeTabStrip() during AddedToWidget(). Check the
     // feature directly because the SideTree shell does not exist yet and its
-    // configuration intentionally omits Chromium's top button container.
+    // configuration intentionally omits Chromium's top button container and
+    // provides its own tab search.
     if (base::FeatureList::IsEnabled(features::kNativeSideTree)) {
-      auto* toolbar_button_controller =
-          TabSearchToolbarButtonController::From(browser_.get());
-      if (!toolbar_->tab_search_button()) {
-        tab_search_bubble_host_.reset();
-        if (toolbar_button_controller) {
-          toolbar_button_controller->UpdateBubbleHost(nullptr);
-        }
-        return;
-      }
-
-      tab_search_bubble_host_ = std::make_unique<TabSearchBubbleHost>(
-          toolbar_->tab_search_button(), browser_.get());
-      if (toolbar_button_controller) {
-        toolbar_button_controller->UpdateBubbleHost(
-            tab_search_bubble_host_.get());
-      }
+      tab_search_bubble_host_.reset();
       return;
     }
 
