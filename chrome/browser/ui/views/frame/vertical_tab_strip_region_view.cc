@@ -945,7 +945,7 @@ void VerticalTabStripRegionView::RequestCollapse(bool collapse) {
   // Do not trigger the animation before tab_strip_view() is set, as the region
   // view only subscribes to animation updates once tab_strip_view() has been
   // attached. target_collapse_state_ is still set so that when
-  // SetTabStripView() is eventually called, the region view and all child
+  // OnTabStripViewSet() is eventually called, the region view and all child
   // views initialize directly in the target collapse state.
   if (!tab_strip_view()) {
     return;
