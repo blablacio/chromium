@@ -2055,7 +2055,7 @@ void PersistSideTreeTabExtraDataToSessionService(
   }
 
   SessionService* session_service =
-      SessionServiceFactory::GetForProfileIfExisting(browser->profile());
+      SessionServiceFactory::GetForProfileIfExisting(browser->GetProfile());
   if (!session_service) {
     return;
   }
@@ -2069,7 +2069,7 @@ void PersistSideTreeTabExtraDataToSessionService(
   std::map<std::string, std::string> extra_data;
   sidetree::PopulateSideTreeExtraData(contents, &extra_data);
   sidetree::PopulateSideTreeWorkspaceExtraData(
-      contents, browser->profile()->GetPrefs(), &extra_data);
+      contents, browser->GetProfile()->GetPrefs(), &extra_data);
 
   for (const auto& [key, value] : extra_data) {
     session_service->AddTabExtraData(window_id, tab_id, key.c_str(), value);
@@ -2710,8 +2710,8 @@ SideTreeTabStripView::SideTreeTabStripView(
   CHECK(browser_view_);
   CHECK(tab_strip_model_);
   DCHECK_EQ(tab_strip_model_, browser_view_->browser()->tab_strip_model());
-  if (browser_view_->browser() && browser_view_->browser()->profile()) {
-    PrefService* const prefs = browser_view_->browser()->profile()->GetPrefs();
+  if (browser_view_->browser() && browser_view_->browser()->GetProfile()) {
+    PrefService* const prefs = browser_view_->browser()->GetProfile()->GetPrefs();
     workspace_controller_ =
         std::make_unique<sidetree::SideTreeWorkspaceController>(
             browser_view_->browser(), prefs);
@@ -3037,7 +3037,7 @@ void SideTreeTabStripView::CreateNewTab() {
 
   const sidetree::SideTreeContainerTabState container_state =
       sidetree::ResolveSideTreeContainerForNewTab(
-          browser->profile() ? browser->profile()->GetPrefs() : nullptr,
+          browser->GetProfile() ? browser->GetProfile()->GetPrefs() : nullptr,
           std::nullopt, active_workspace_id);
   std::optional<sidetree::ScopedSideTreeNewTabContainerOverride>
       container_override;
@@ -3097,7 +3097,7 @@ void SideTreeTabStripView::AddTabListNewTabButton() {
   std::u16string new_tab_label = u"New tab";
   bool new_tab_uses_container = false;
   if (browser_view_ && browser_view_->browser() &&
-      browser_view_->browser()->profile()) {
+      browser_view_->browser()->GetProfile()) {
     std::optional<base::Uuid> active_workspace_id;
     if (sidetree::SideTreeWorkspaceController* controller =
             workspace_controller()) {
@@ -3105,7 +3105,7 @@ void SideTreeTabStripView::AddTabListNewTabButton() {
     }
     const sidetree::SideTreeContainerTabState container_state =
         sidetree::ResolveSideTreeContainerForNewTab(
-            browser_view_->browser()->profile()->GetPrefs(), std::nullopt,
+            browser_view_->browser()->GetProfile()->GetPrefs(), std::nullopt,
             active_workspace_id);
     if (container_state.UsesContainer() && container_state.container) {
       new_tab_icon = &WorkspaceVectorIcon(container_state.container->icon);
@@ -3413,7 +3413,7 @@ void SideTreeTabStripView::ReopenSideTreeTabInContainer(
 
   if (container_id && container_id->is_valid()) {
     sidetree::SideTreeProfileService profile_service(
-        browser_view_->browser()->profile()->GetPrefs());
+        browser_view_->browser()->GetProfile()->GetPrefs());
     if (!profile_service.HasLiveContainer(*container_id)) {
       return;
     }
@@ -3727,7 +3727,7 @@ bool SideTreeTabStripView::IsCommandIdChecked(int command_id) const {
       return false;
     }
     sidetree::SideTreeProfileService profile_service(
-        browser_view_->browser()->profile()->GetPrefs());
+        browser_view_->browser()->GetProfile()->GetPrefs());
     const base::Uuid active_default_container_id =
         profile_service.ResolveWorkspaceDefaultContainerIdOrEmpty(
             management_default_container_workspace_id_);
@@ -3755,7 +3755,7 @@ bool SideTreeTabStripView::IsCommandIdChecked(int command_id) const {
       return false;
     }
     sidetree::SideTreeProfileService profile_service(
-        browser_view_->browser()->profile()->GetPrefs());
+        browser_view_->browser()->GetProfile()->GetPrefs());
     std::optional<sidetree::SideTreeContainerRecord> container =
         profile_service.FindContainer(color_command->container_id);
     return container && container->color == color_command->color;
@@ -3768,7 +3768,7 @@ bool SideTreeTabStripView::IsCommandIdChecked(int command_id) const {
       return false;
     }
     sidetree::SideTreeProfileService profile_service(
-        browser_view_->browser()->profile()->GetPrefs());
+        browser_view_->browser()->GetProfile()->GetPrefs());
     std::optional<sidetree::SideTreeContainerRecord> container =
         profile_service.FindContainer(icon_command->container_id);
     return container && container->icon == icon_command->icon;
@@ -3781,7 +3781,7 @@ bool SideTreeTabStripView::IsCommandIdChecked(int command_id) const {
       return false;
     }
     sidetree::SideTreeProfileService profile_service(
-        browser_view_->browser()->profile()->GetPrefs());
+        browser_view_->browser()->GetProfile()->GetPrefs());
     for (const sidetree::SideTreeWorkspaceRecord& workspace :
          profile_service.GetWorkspaces()) {
       if (workspace.id == icon_command->workspace_id && !workspace.archived) {
@@ -3853,7 +3853,7 @@ bool SideTreeTabStripView::IsCommandIdEnabled(int command_id) const {
 
   if (command_id == kSideTreeSettingsCommand) {
     return browser_view_ && browser_view_->browser() &&
-           browser_view_->browser()->profile();
+           browser_view_->browser()->GetProfile();
   }
 
   if (command_id == kWorkspaceContextDeleteCommand) {
@@ -4191,7 +4191,7 @@ SideTreeTabRowView::State SideTreeTabStripView::BuildRowState(
     state.crashed = contents->IsCrashed();
     SideTreeContainerVisualInfo container_info =
         ResolveSideTreeContainerVisualInfoForTab(
-            contents, browser_view_->browser()->profile()->GetPrefs());
+            contents, browser_view_->browser()->GetProfile()->GetPrefs());
     state.container_title = std::move(container_info.title);
     state.container_color = container_info.color;
   }
@@ -4207,7 +4207,7 @@ SideTreeTabStripView::BuildContainerMenuItems() const {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   for (const sidetree::SideTreeContainerRecord& container :
        profile_service.GetContainers()) {
     if (!profile_service.HasLiveContainer(container.id) ||
@@ -4644,7 +4644,7 @@ void SideTreeTabStripView::ShowSideTreeManagement(
     bool initial_editor_is_container,
     views::View* anchor_view) {
   if (!settings_button_ || !browser_view_ || !browser_view_->browser() ||
-      !browser_view_->browser()->profile()) {
+      !browser_view_->browser()->GetProfile()) {
     return;
   }
   views::View* bubble_anchor =
@@ -4667,7 +4667,7 @@ void SideTreeTabStripView::ShowSideTreeManagement(
     }
   }
 
-  PrefService* pref_service = browser_view_->browser()->profile()->GetPrefs();
+  PrefService* pref_service = browser_view_->browser()->GetProfile()->GetPrefs();
   auto management_contents = std::make_unique<SideTreeManagementContentsView>(
       workspace_controller(), pref_service, weak_factory_.GetWeakPtr(),
       SideTreeSettingsDataSummary(workspace_controller(), pref_service),
@@ -5049,7 +5049,7 @@ SideTreeTabStripView::CreateWorkspaceDefaultContainerMenuModel() {
     active_workspace_id = controller->GetActiveWorkspaceId();
   }
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::vector<sidetree::SideTreeWorkspaceDefaultContainerMenuItem> items =
       sidetree::BuildWorkspaceDefaultContainerMenuItems(profile_service,
                                                         active_workspace_id);
@@ -5072,7 +5072,7 @@ SideTreeTabStripView::CreateProfileDefaultContainerMenuModel() {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::vector<sidetree::SideTreeProfileDefaultContainerMenuItem> items =
       sidetree::BuildProfileDefaultContainerMenuItems(profile_service);
   sidetree::AddProfileDefaultContainerMenuItems(model.get(), items);
@@ -5093,7 +5093,7 @@ SideTreeTabStripView::CreateRenameContainerMenuModel() {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::vector<sidetree::SideTreeRenameContainerMenuItem> items =
       sidetree::BuildRenameContainerMenuItems(profile_service);
   if (items.empty()) {
@@ -5118,7 +5118,7 @@ SideTreeTabStripView::CreateContainerColorMenuModel() {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::vector<sidetree::SideTreeContainerColorMenuItem> items =
       sidetree::BuildContainerColorMenuItems(profile_service);
   if (items.empty()) {
@@ -5154,7 +5154,7 @@ SideTreeTabStripView::CreateContainerIconMenuModel() {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::vector<sidetree::SideTreeContainerIconMenuItem> items =
       sidetree::BuildContainerIconMenuItems(profile_service);
   if (items.empty()) {
@@ -5187,7 +5187,7 @@ SideTreeTabStripView::CreateWorkspaceIconMenuModel() {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::vector<sidetree::SideTreeWorkspaceIconMenuItem> items =
       sidetree::BuildWorkspaceIconMenuItems(profile_service);
   if (items.empty()) {
@@ -5224,7 +5224,7 @@ SideTreeTabStripView::CreateRemoveContainerMenuModel() {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::vector<sidetree::SideTreeRemoveContainerMenuItem> items =
       sidetree::BuildRemoveContainerMenuItems(profile_service);
   if (items.empty()) {
@@ -5258,7 +5258,7 @@ SideTreeTabStripView::CreateWorkspaceDefaultContainerEditorMenuModel(
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::vector<sidetree::SideTreeWorkspaceDefaultContainerMenuItem> items =
       sidetree::BuildWorkspaceDefaultContainerMenuItems(profile_service,
                                                         workspace_id);
@@ -5292,7 +5292,7 @@ SideTreeTabStripView::CreateWorkspaceIconEditorMenuModel(
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::vector<sidetree::SideTreeWorkspaceIconMenuItem> items =
       sidetree::BuildWorkspaceIconMenuItems(profile_service);
   for (const sidetree::SideTreeWorkspaceIconMenuItem& item : items) {
@@ -5331,7 +5331,7 @@ SideTreeTabStripView::CreateContainerColorEditorMenuModel(
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::vector<sidetree::SideTreeContainerColorMenuItem> items =
       sidetree::BuildContainerColorMenuItems(profile_service);
   for (const sidetree::SideTreeContainerColorMenuItem& item : items) {
@@ -5369,7 +5369,7 @@ SideTreeTabStripView::CreateContainerIconEditorMenuModel(
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::vector<sidetree::SideTreeContainerIconMenuItem> items =
       sidetree::BuildContainerIconMenuItems(profile_service);
   for (const sidetree::SideTreeContainerIconMenuItem& item : items) {
@@ -5419,7 +5419,7 @@ base::Uuid SideTreeTabStripView::CreateContainer() {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   const base::Uuid container_id = profile_service.CreateContainer(
       sidetree::NextContainerTitleForMenu(profile_service), std::string(),
       std::string(), /*ephemeral=*/false);
@@ -5560,7 +5560,7 @@ void SideTreeTabStripView::SetWorkspaceDefaultContainer(
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   if (profile_service.SetWorkspaceDefaultContainer(workspace_id,
                                                    container_id)) {
     RefreshRows(/*reveal_active_tab=*/false);
@@ -5635,7 +5635,7 @@ void SideTreeTabStripView::ShowRenameContainerDialog(base::Uuid container_id) {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::optional<sidetree::SideTreeContainerRecord> container =
       profile_service.FindContainer(container_id);
   if (!container || !profile_service.HasLiveContainer(container_id)) {
@@ -5688,7 +5688,7 @@ void SideTreeTabStripView::RenameContainer(base::Uuid container_id,
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   if (profile_service.RenameContainer(container_id,
                                       base::UTF16ToUTF8(normalized_title))) {
     RefreshRows(/*reveal_active_tab=*/false);
@@ -5751,7 +5751,7 @@ void SideTreeTabStripView::ShowRemoveContainerDialog(base::Uuid container_id) {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   std::optional<sidetree::SideTreeContainerRecord> container =
       profile_service.FindContainer(container_id);
   if (!container || !profile_service.HasLiveContainer(container_id) ||
@@ -5794,7 +5794,7 @@ void SideTreeTabStripView::SetContainerColor(base::Uuid container_id,
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   if (profile_service.SetContainerColor(container_id, std::move(color))) {
     RefreshRows(/*reveal_active_tab=*/false);
   }
@@ -5807,7 +5807,7 @@ void SideTreeTabStripView::SetContainerIcon(base::Uuid container_id,
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   if (profile_service.SetContainerIcon(container_id, std::move(icon))) {
     RefreshRows(/*reveal_active_tab=*/false);
   }
@@ -5820,7 +5820,7 @@ void SideTreeTabStripView::SetWorkspaceColor(base::Uuid workspace_id,
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   if (profile_service.SetWorkspaceColor(workspace_id, std::move(color))) {
     RebuildRows(/*reveal_active_tab=*/false);
   }
@@ -5833,7 +5833,7 @@ void SideTreeTabStripView::SetWorkspaceIcon(base::Uuid workspace_id,
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   if (profile_service.SetWorkspaceIcon(workspace_id, std::move(icon))) {
     RebuildRows(/*reveal_active_tab=*/false);
   }
@@ -5845,7 +5845,7 @@ void SideTreeTabStripView::RemoveContainer(base::Uuid container_id) {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   if (profile_service.TombstoneContainer(container_id)) {
     RefreshRows(/*reveal_active_tab=*/false);
   }
@@ -5858,7 +5858,7 @@ base::Uuid SideTreeTabStripView::ActiveWorkspaceDefaultContainerId() const {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   return profile_service.ResolveWorkspaceDefaultContainerIdOrEmpty(
       controller->GetActiveWorkspaceId());
 }
@@ -5871,7 +5871,7 @@ void SideTreeTabStripView::SetActiveWorkspaceDefaultContainer(
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   if (profile_service.SetWorkspaceDefaultContainer(
           controller->GetActiveWorkspaceId(), container_id)) {
     UpdateHeader();
@@ -5884,7 +5884,7 @@ base::Uuid SideTreeTabStripView::ActiveProfileDefaultContainerId() const {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   return profile_service.ResolveLiveContainerIdOrEmpty(
       profile_service.GetDefaultContainerId());
 }
@@ -5895,7 +5895,7 @@ void SideTreeTabStripView::SetProfileDefaultContainer(base::Uuid container_id) {
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   profile_service.SetDefaultContainer(container_id);
 }
 
@@ -5944,7 +5944,7 @@ bool SideTreeTabStripView::MaybeRunWorkspaceHarnessCommand(
       command == "show-sidetree-management-editor" ||
       command == "hide-sidetree-management") {
     if (!browser_view_ || !browser_view_->browser() ||
-        !browser_view_->browser()->profile()) {
+        !browser_view_->browser()->GetProfile()) {
       PublishHarnessResultUrl(
           contents, url,
           SideTreeManagementSnapshotJson(
@@ -5983,7 +5983,7 @@ bool SideTreeTabStripView::MaybeRunWorkspaceHarnessCommand(
         initial_editor_created = true;
       } else if (kind == "container") {
         sidetree::SideTreeProfileService profile_service(
-            browser_view_->browser()->profile()->GetPrefs());
+            browser_view_->browser()->GetProfile()->GetPrefs());
         for (const sidetree::SideTreeContainerRecord& container :
              profile_service.GetContainers()) {
           if (profile_service.HasLiveContainer(container.id) &&
@@ -6005,7 +6005,7 @@ bool SideTreeTabStripView::MaybeRunWorkspaceHarnessCommand(
         PublishHarnessResultUrl(
             contents, url,
             SideTreeManagementSnapshotJson(
-                browser_view_->browser()->profile()->GetPrefs(),
+                browser_view_->browser()->GetProfile()->GetPrefs(),
                 workspace_controller(),
                 settings_button_ && settings_button_->GetVisible(),
                 management_bubble_widget_, settings_button_, /*ok=*/false,
@@ -6021,7 +6021,7 @@ bool SideTreeTabStripView::MaybeRunWorkspaceHarnessCommand(
     PublishHarnessResultUrl(
         contents, url,
         SideTreeManagementSnapshotJson(
-            browser_view_->browser()->profile()->GetPrefs(),
+            browser_view_->browser()->GetProfile()->GetPrefs(),
             workspace_controller(),
             settings_button_ && settings_button_->GetVisible(),
             management_bubble_widget_, settings_button_));
@@ -6146,14 +6146,14 @@ bool SideTreeTabStripView::MaybeRunWorkspaceHarnessCommand(
       command == "set-sidetree-setting" ||
       command == "show-sidetree-settings") {
     if (!browser_view_ || !browser_view_->browser() ||
-        !browser_view_->browser()->profile()) {
+        !browser_view_->browser()->GetProfile()) {
       PublishHarnessResultUrl(
           contents, url,
           settings_snapshot(nullptr, /*ok=*/false, "missing profile"));
       return true;
     }
 
-    PrefService* pref_service = browser_view_->browser()->profile()->GetPrefs();
+    PrefService* pref_service = browser_view_->browser()->GetProfile()->GetPrefs();
     if (!pref_service) {
       PublishHarnessResultUrl(
           contents, url,
@@ -6249,7 +6249,7 @@ bool SideTreeTabStripView::MaybeRunWorkspaceHarnessCommand(
 
   if (command == "hover-preview-snapshot" || command == "set-hover-preview") {
     if (!browser_view_ || !browser_view_->browser() ||
-        !browser_view_->browser()->profile()) {
+        !browser_view_->browser()->GetProfile()) {
       PublishHarnessResultUrl(
           contents, url,
           hover_preview_snapshot(/*ok=*/false, "missing profile"));
@@ -6265,7 +6265,7 @@ bool SideTreeTabStripView::MaybeRunWorkspaceHarnessCommand(
         return true;
       }
       PrefService* pref_service =
-          browser_view_->browser()->profile()->GetPrefs();
+          browser_view_->browser()->GetProfile()->GetPrefs();
       if (!pref_service) {
         PublishHarnessResultUrl(
             contents, url,
@@ -6344,7 +6344,7 @@ bool SideTreeTabStripView::MaybeRunWorkspaceHarnessCommand(
     }
 
     sidetree::SideTreeProfileService profile_service(
-        browser_view_->browser()->profile()->GetPrefs());
+        browser_view_->browser()->GetProfile()->GetPrefs());
 
     if (command == "container-snapshot") {
       publish_container_snapshot(profile_service);
@@ -6608,7 +6608,7 @@ bool SideTreeTabStripView::MaybeRunWorkspaceHarnessCommand(
     }
 
     sidetree::SideTreeProfileService profile_service(
-        browser_view_->browser()->profile()->GetPrefs());
+        browser_view_->browser()->GetProfile()->GetPrefs());
     if (!profile_service.SetWorkspaceDefaultContainer(*workspace_id,
                                                       container_id)) {
       publish_container_snapshot(profile_service, /*ok=*/false,
@@ -6641,7 +6641,7 @@ bool SideTreeTabStripView::MaybeRunWorkspaceHarnessCommand(
     }
 
     sidetree::SideTreeProfileService profile_service(
-        browser_view_->browser()->profile()->GetPrefs());
+        browser_view_->browser()->GetProfile()->GetPrefs());
     if (!profile_service.SetWorkspaceIcon(*workspace_id, std::move(icon))) {
       publish_workspace_snapshot(/*ok=*/false, "set workspace icon failed");
       return true;
@@ -6882,7 +6882,7 @@ std::optional<base::Uuid> SideTreeTabStripView::ContainerIdForHarnessTitle(
   }
 
   sidetree::SideTreeProfileService profile_service(
-      browser_view_->browser()->profile()->GetPrefs());
+      browser_view_->browser()->GetProfile()->GetPrefs());
   for (const sidetree::SideTreeContainerRecord& container :
        profile_service.GetContainers()) {
     if (container.title == title &&
@@ -7354,33 +7354,33 @@ bool SideTreeTabStripView::IsBrowserNewTabPage(
 
 bool SideTreeTabStripView::ShowInlineTabActions() const {
   if (!browser_view_ || !browser_view_->browser() ||
-      !browser_view_->browser()->profile()) {
+      !browser_view_->browser()->GetProfile()) {
     return false;
   }
 
-  PrefService* pref_service = browser_view_->browser()->profile()->GetPrefs();
+  PrefService* pref_service = browser_view_->browser()->GetProfile()->GetPrefs();
   return pref_service &&
          pref_service->GetBoolean(prefs::kSideTreeShowInlineTabActions);
 }
 
 bool SideTreeTabStripView::ShowHoverPreviews() const {
   if (!browser_view_ || !browser_view_->browser() ||
-      !browser_view_->browser()->profile()) {
+      !browser_view_->browser()->GetProfile()) {
     return false;
   }
 
-  PrefService* pref_service = browser_view_->browser()->profile()->GetPrefs();
+  PrefService* pref_service = browser_view_->browser()->GetProfile()->GetPrefs();
   return pref_service &&
          pref_service->GetBoolean(prefs::kSideTreeShowHoverPreviews);
 }
 
 bool SideTreeTabStripView::ShowTabMuteButton() const {
   if (!browser_view_ || !browser_view_->browser() ||
-      !browser_view_->browser()->profile()) {
+      !browser_view_->browser()->GetProfile()) {
     return false;
   }
 
-  PrefService* pref_service = browser_view_->browser()->profile()->GetPrefs();
+  PrefService* pref_service = browser_view_->browser()->GetProfile()->GetPrefs();
   return pref_service &&
          pref_service->GetBoolean(prefs::kSideTreeShowTabMuteButton);
 }
@@ -7400,7 +7400,7 @@ void SideTreeTabStripView::RefreshSideTreePlacement() {
 
 void SideTreeTabStripView::ShowSideTreeSettings() {
   if (!settings_button_ || !browser_view_ || !browser_view_->browser() ||
-      !browser_view_->browser()->profile()) {
+      !browser_view_->browser()->GetProfile()) {
     return;
   }
 
@@ -7411,7 +7411,7 @@ void SideTreeTabStripView::ShowSideTreeSettings() {
     return;
   }
 
-  PrefService* pref_service = browser_view_->browser()->profile()->GetPrefs();
+  PrefService* pref_service = browser_view_->browser()->GetProfile()->GetPrefs();
   auto settings_contents = std::make_unique<SideTreeSettingsContentsView>(
       pref_service, weak_factory_.GetWeakPtr(),
       SideTreeSettingsDataSummary(workspace_controller(), pref_service));
@@ -7497,13 +7497,13 @@ bool SideTreeTabStripView::SearchMatchesVisibleRow(
   }
 
   if (!browser_view_ || !browser_view_->browser() ||
-      !browser_view_->browser()->profile()) {
+      !browser_view_->browser()->GetProfile()) {
     return false;
   }
 
   SideTreeContainerVisualInfo container_info =
       ResolveSideTreeContainerVisualInfoForTab(
-          contents, browser_view_->browser()->profile()->GetPrefs());
+          contents, browser_view_->browser()->GetProfile()->GetPrefs());
   return SearchTextContains(NormalizeSearchText(container_info.title),
                             normalized_query);
 }
