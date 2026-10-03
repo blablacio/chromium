@@ -29,8 +29,8 @@
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/sessions/session_service.h"
 #include "chrome/browser/sessions/session_service_factory.h"
-#include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_commands.h"
+#include "chrome/browser/ui/browser_window/public/browser_window_interface.h"
 #include "chrome/browser/ui/color/chrome_color_id.h"
 #include "chrome/browser/ui/layout_constants.h"
 #include "chrome/browser/ui/navigator/browser_navigator.h"
@@ -2049,7 +2049,7 @@ void PersistSideTreeTabExtraDataToSessionService(
     return;
   }
 
-  Browser* browser = browser_view->browser();
+  BrowserWindowInterface* browser = browser_view->browser();
   if (!browser) {
     return;
   }
@@ -2060,7 +2060,7 @@ void PersistSideTreeTabExtraDataToSessionService(
     return;
   }
 
-  const SessionID window_id = browser->session_id();
+  const SessionID window_id = browser->GetSessionID();
   const SessionID tab_id = sessions::SessionTabHelper::IdForTab(contents);
   if (!window_id.is_valid() || !tab_id.is_valid()) {
     return;
@@ -3028,7 +3028,7 @@ void SideTreeTabStripView::CreateNewTab() {
     return;
   }
 
-  Browser* browser = browser_view_->browser();
+  BrowserWindowInterface* browser = browser_view_->browser();
   sidetree::SideTreeWorkspaceController* controller = workspace_controller();
   std::optional<base::Uuid> active_workspace_id;
   if (controller) {
@@ -3263,8 +3263,8 @@ void SideTreeTabStripView::OnTabStripModelChanged(
 }
 
 void SideTreeTabStripView::OnTabChangedAt(tabs::TabInterface* tab,
-                                          int index,
                                           TabChangeType change_type) {
+  const int index = tab_strip_model_->GetIndexOfTab(tab);
   if (ContainsIndex(index) && MaybeRunWorkspaceHarnessCommand(
                                   tab_strip_model_->GetWebContentsAt(index))) {
     return;
