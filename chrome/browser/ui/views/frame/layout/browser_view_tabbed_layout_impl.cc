@@ -1065,6 +1065,7 @@ BrowserViewTabbedLayoutImpl::CalculateProposedLayout(
     layout.AddChild(views().sidetree_titlebar_collapse_button,
                     collapse_button_bounds, show_collapse_button);
   }
+
   // When the tabstrip isn't at the top or in constrained widths, the top
   // container is laid out before all side panels.
   if (horizontal_layout.force_top_container_to_top &&
